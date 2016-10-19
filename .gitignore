@@ -1,7 +1,10 @@
 # Some project specifics
+*.jar
+*.zip
 data/
 creds.*
 dump/
+hack/
 
 *.class
 *.log

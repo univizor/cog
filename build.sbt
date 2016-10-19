@@ -21,8 +21,21 @@ scalacOptions ++= Seq(
   "-deprecation",
   "-unchecked",
   "-feature",
+  "-Xfuture",
   "-language:_",
-  "-deprecation"
+  "-deprecation",
+  "-Yno-adapted-args",
+  "-Xlint",
+  "-Yinline-warnings",
+  "-Ywarn-adapted-args",
+  "-Ywarn-inaccessible",
+  "-Ywarn-nullary-override",
+  "-Ywarn-nullary-unit",
+  "-Xfatal-warnings",
+  "-deprecation:false",
+  "-optimise",
+  "-Yclosure-elim",
+  "-Yinline"
 )
 
 
@@ -30,3 +43,5 @@ resolvers += Resolver.sonatypeRepo("snapshots")
 resolvers += "Plasma Conduit Repository" at "http://dl.bintray.com/plasmaconduit/releases"
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 resolvers += Resolver.bintrayRepo("yetu", "maven")
+
+mainClass in (Compile, run) := Some("cog.GeneralStats")
