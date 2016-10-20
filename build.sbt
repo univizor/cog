@@ -44,4 +44,14 @@ resolvers += "Plasma Conduit Repository" at "http://dl.bintray.com/plasmaconduit
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 resolvers += Resolver.bintrayRepo("yetu", "maven")
 
-mainClass in (Compile, run) := Some("cog.GeneralStats")
+mainClass in(Compile, run) := Some("cog.GeneralStats")
+
+fork := true
+
+assemblyMergeStrategy in assembly := {
+  case "META-INF/MANIFEST.MF" => MergeStrategy.rename
+  case x => {
+    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    if (oldStrategy(x) == MergeStrategy.deduplicate) MergeStrategy.first else oldStrategy(x)
+  }
+}

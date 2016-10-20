@@ -1,4 +1,5 @@
 # Some project specifics
+per_*/
 *.jar
 *.zip
 data/

@@ -1,7 +1,8 @@
-package cog;
+package cog
+
 import java.io.DataInputStream
 
-import org.apache.log4j.{Level, Logger}
+import org.apache.log4j.{LogManager, Level, Logger}
 import org.apache.spark.input.PortableDataStream
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkContext, SparkConf}
@@ -12,25 +13,39 @@ import scala.util.{Try, Success, Failure}
 
 object GeneralStats {
   Logger.getLogger("org.apache.pdfbox.pdmodel.font.PDCIDFontType2").setLevel(Level.OFF)
+  Logger.getLogger("org.apache.pdfbox.pdmodel.font.PDFont").setLevel(Level.OFF)
+  Logger.getLogger("org.apache.pdfbox.pdmodel.font.PDSimpleFont").setLevel(Level.OFF)
+  Logger.getLogger("org.apache.pdfbox.pdmodel.font.FontManager").setLevel(Level.OFF)
 
   final val MIN_PARTITIONS = 10
-  final val MASTER = "local[8]"
-  final val SAMPLE_SIZE = 500
+  final val SLICES_NUMBER = 10
+  final val SAMPLE_SIZE = 1000
 
   def main(args: Array[String]) = {
-    val conf = new SparkConf().setAppName(this.getClass.getName).setMaster(MASTER)
+    val log = LogManager.getRootLogger
+    val master = args(0)
+    val path = args(1)
+
+    log.info(s"With master on ${master} on path ${path}")
+
+    val conf = new SparkConf().setAppName("GeneralStats").setMaster(master = master)
+
     val sc = new SparkContext(conf)
-
-    val files = sc.binaryFiles("./data/files/", minPartitions = MIN_PARTITIONS).takeSample(false, SAMPLE_SIZE)
+    /*
+    val files = sc.binaryFiles(path, minPartitions = MIN_PARTITIONS).takeSample(false, SAMPLE_SIZE)
     val pages = readPDFs(sc.parallelize(files))
+    // val pages = readPDFs(files).cache()
+      */
 
+    val files = sc.binaryFiles(path, minPartitions = MIN_PARTITIONS)
+    val pages = readPDFs(files).cache()
     val metas = extractMeta(pages)
 
     val perYear = metas.map { case (name: String, seq: Seq[String]) => (seq(0), name) }.countByKey()
     val perKind = metas.map { case (name: String, seq: Seq[String]) => (seq(1), name) }.countByKey()
 
-    println(perYear)
-    println(perKind)
+    sc.parallelize(perYear.toSeq).saveAsTextFile("per_year")
+    sc.parallelize(perKind.toSeq).saveAsTextFile("per_kind")
 
     sc.stop()
   }
