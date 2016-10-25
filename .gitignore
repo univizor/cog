@@ -1,4 +1,8 @@
 # Some project specifics
+metastore_db/
+experimental/
+NOTES.md
+s3.*
 per_*/
 *.jar
 *.zip
