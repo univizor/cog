@@ -1,5 +1,8 @@
 package nlp
 
+import java.io.BufferedInputStream
+import java.util.zip.GZIPInputStream
+
 import eu.hlavki.text.lemmagen.{LemmatizerFactory => HlavkiLemmatizerFactory}
 import si.zitnik.research.lemmagen.{LemmagenFactory => ZitnikLemmagenFactory}
 
@@ -24,7 +27,7 @@ trait LikeLemmatizer {
 
 trait ZitnikLemmatizer extends LikeLemmatizer {
   override lazy val lemmatizer: si.zitnik.research.lemmagen.impl.Lemmatizer = {
-    ZitnikLemmagenFactory.readObject(getClass.getResourceAsStream(s"/lemmas/lemmagenSLOModel.obj"))
+    ZitnikLemmagenFactory.readObject(new GZIPInputStream(new BufferedInputStream(getClass.getResourceAsStream(s"/lemmas/lemmagenSLOModel.obj.gz"))))
       .asInstanceOf[si.zitnik.research.lemmagen.impl.Lemmatizer]
   }
 
