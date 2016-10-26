@@ -18,7 +18,6 @@ object PagesProcessor {
     spark.sqlContext.udf.register("matchOf", (text: String, expression: String) => TextMatcher.matchOf(text, expression))
     spark.sqlContext.udf.register("yearOf", (text: String) => TextMatcher.firstOf(text, "(20\\d{2,2})"))
 
-
     // Counting number of all rows
     val q = pages.sqlContext.sql("SELECT COUNT(*) as number_of_pages FROM pgs WHERE pgs.number = 1")
     val row = q.collect()

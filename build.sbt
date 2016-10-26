@@ -14,6 +14,8 @@ val sparkVersion = "2.0.1"
 val pdfboxVersion = "2.0.3"
 val scalaTestVersion = "3.0.0"
 
+unmanagedJars in Compile += file(Path.userHome + "/Your-Jar-Path/Full-Jar-Name.jar")
+
 libraryDependencies ++= Seq(
   "org.apache.pdfbox" % "pdfbox" % pdfboxVersion,
   "org.apache.pdfbox" % "fontbox" % pdfboxVersion,
