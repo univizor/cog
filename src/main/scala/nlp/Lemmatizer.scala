@@ -26,8 +26,11 @@ trait LikeLemmatizer {
 }
 
 trait ZitnikLemmatizer extends LikeLemmatizer {
+  final val BUFFER_SIZE = 1024
+  final val LEMMA_PATH = "/lemmas/lemmagenSLOModel.obj.gz"
+
   override lazy val lemmatizer: si.zitnik.research.lemmagen.impl.Lemmatizer = {
-    ZitnikLemmagenFactory.readObject(new GZIPInputStream(new BufferedInputStream(getClass.getResourceAsStream(s"/lemmas/lemmagenSLOModel.obj.gz"))))
+    ZitnikLemmagenFactory.readObject(new GZIPInputStream(new BufferedInputStream(getClass.getResourceAsStream(LEMMA_PATH), BUFFER_SIZE)))
       .asInstanceOf[si.zitnik.research.lemmagen.impl.Lemmatizer]
   }
 

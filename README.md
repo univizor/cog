@@ -3,8 +3,11 @@
 ## Stages
 
 1. PDF to pages ~> [TextSplitter](./src/main/scala/TextSplitter.scala).
-2. Pages to sentences ~> [PagesProcessor](./src/main/scala/PagesProcessor.scala).
-3. Detecting intersections ~> `Detector`
+2. Words to lemmas ~> [Lemmatizer](./src/main/scala/nlp/Lemmatizer.scala) with [LemmaGen] and extensions.
+3. Pages to sentences ~> [PagesProcessor](./src/main/scala/PagesProcessor.scala).
+4. Detecting intersections ~> `Detector`
+
+
 
 ## Development
 
@@ -22,3 +25,6 @@ sbt test
 ```
 
 - [Oto Brglez](https://github.com/otobrglez/cog)
+
+
+[LemmaGen]: http://lemmatise.ijs.si/
