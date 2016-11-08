@@ -1,15 +1,15 @@
-package cog
+package tools
 
 import java.io.DataInputStream
 
-import org.apache.log4j.{LogManager, Level, Logger}
+import org.apache.log4j.{Level, LogManager, Logger}
+import org.apache.pdfbox.pdmodel.PDDocument
+import org.apache.pdfbox.text.PDFTextStripper
 import org.apache.spark.input.PortableDataStream
 import org.apache.spark.rdd.RDD
-import org.apache.spark.{SparkContext, SparkConf}
-import org.apache.pdfbox.pdfparser.PDFParser
-import org.apache.pdfbox.text.PDFTextStripper
-import org.apache.pdfbox.pdmodel.PDDocument
-import scala.util.{Try, Success, Failure}
+import org.apache.spark.{SparkConf, SparkContext}
+
+import scala.util.Try
 
 object GeneralStats {
   Logger.getLogger("org.apache.pdfbox.pdmodel.font.PDCIDFontType2").setLevel(Level.OFF)

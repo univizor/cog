@@ -14,6 +14,11 @@ trait LikeLemmatizer {
 
   private def lemmatizeText(text: String): String = WORD_TOKEN_EXP.replaceAllIn(text, m => lemmatizeWord(m.group(1)))
 
+  /**
+    * Lemmatizes incoming text and retuns text where words are replaced with lemmas.
+    * @param text
+    * @return
+    */
   def lemmatize(text: String) = {
     try {
       lemmatizeText(text)
@@ -25,6 +30,10 @@ trait LikeLemmatizer {
   }
 }
 
+/**
+  * This implementation uses Lemmagen4J for lemma extraction. Loading of this lemmatizer takes much more time,
+  * even with GZIPed models. Once model is loaded it usually outperforms others - content-wise.
+  */
 trait ZitnikLemmatizer extends LikeLemmatizer {
   final val BUFFER_SIZE = 1024
   final val LEMMA_PATH = "/lemmas/lemmagenSLOModel.obj.gz"
@@ -38,9 +47,13 @@ trait ZitnikLemmatizer extends LikeLemmatizer {
 }
 
 trait HlavkiLemmatizer extends LikeLemmatizer {
-  override lazy val lemmatizer = HlavkiLemmatizerFactory.getPrebuilt("mlteast-sl")
+  final val MODEL_NAME = "mlteast-sl"
+  override lazy val lemmatizer = HlavkiLemmatizerFactory.getPrebuilt(MODEL_NAME)
 
   def lemmatizeWord(word: String) = lemmatizer.lemmatize(word).toString
 }
 
+/**
+  * Lemmatizer uses "HlavkiLemmatizer" as default implementation.
+  */
 object Lemmatizer extends HlavkiLemmatizer {}

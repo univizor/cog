@@ -15,7 +15,10 @@ class LemmatizerSpec extends FunSpec {
       assertResult(true)("(biti)".r.findFirstIn(text).getOrElse("") != "")
     }
 
-    it("ZitnikLemmatizer") {
+    /**
+      * Not in use at the moment.
+      */
+    ignore("ZitnikLemmatizer") {
       object L extends ZitnikLemmatizer {}
       val text = L.lemmatize(originalText)
 
