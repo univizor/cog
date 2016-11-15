@@ -13,6 +13,7 @@ resolvers += Resolver.bintrayRepo("yetu", "maven")
 val sparkVersion = "2.0.1"
 val pdfboxVersion = "2.0.3"
 val scalaTestVersion = "3.0.0"
+val opennlpVersion = "1.6.0"
 
 unmanagedJars in Compile += file(Path.userHome + "/Your-Jar-Path/Full-Jar-Name.jar")
 
@@ -24,6 +25,8 @@ libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-sql" % sparkVersion,
   "org.apache.spark" %% "spark-repl" % sparkVersion,
   // "org.apache.spark" %% "spark-hive" % sparkVersion,
+
+  "org.apache.opennlp" % "opennlp-tools" % opennlpVersion,
 
   "org.bouncycastle" % "bcprov-jdk15on" % "1.55",
   "org.bouncycastle" % "bcmail-jdk15on" % "1.55",

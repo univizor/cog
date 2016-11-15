@@ -1,6 +1,6 @@
 import java.io.DataInputStream
 
-import models.RawDocument
+import models._
 import org.apache.log4j.{Level, Logger, BasicConfigurator}
 import org.scalatest.FunSpec
 import scala.io.Source

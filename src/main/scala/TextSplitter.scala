@@ -13,17 +13,17 @@ import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import scala.reflect.runtime.universe.TypeTag
 
 object TextSplitter {
-
   final val APP_NAME = "TextSplitter"
   final val DEFAULT_MIN_PARTITIONS = 10
-  // val log: Logger = LoggerFactory.getLogger(getClass())
 
   def main(args: Array[String]): Unit = {
     var master: String = ""
     var withSample: Option[Int] = None
     var minPartitions = 10
     var path = "./data/files"
-    var toPath = "./data/pages"
+    var toPagesPath = "./data/pages"
+    var toDocumentsPath = "./data/documents"
+    var toSentencesPath = "./data/sentences"
     var fromPage: Option[Int] = Some(1)
     var toPage: Option[Int] = None
 
@@ -32,23 +32,59 @@ object TextSplitter {
       case Array("withSample", argsSample: String) => withSample = Try(argsSample.toInt).toOption
       case Array("minPartitions", p: String) => minPartitions = p.toInt
       case Array("path", p: String) => path = p
-      case Array("toPath", p: String) => toPath = p
+      case Array("toPagesPath", p: String) => toPagesPath = p
+      case Array("toDocumentsPath", p: String) => toDocumentsPath = p
+      case Array("toSentencesPath", p: String) => toSentencesPath = p
       case Array("fromPage", p: String) => fromPage = Try(p.toInt).toOption
       case Array("toPage", p: String) => toPage = Try(p.toInt).toOption
     }
 
-    val conf = new SparkConf().setAppName(APP_NAME)
-      .setMaster(master = master)
-
-    val session = SparkSession.builder
-      .config(conf)
-      .getOrCreate()
+    val conf = new SparkConf().setAppName(APP_NAME).setMaster(master = master)
+    val session = SparkSession.builder.config(conf).getOrCreate()
 
     val files = readFiles(session.sparkContext, path, withSample, Some(minPartitions))
-    val pages = files.map(pair => PDFReader.readAsPages(pair._1, pair._2.open)).flatMap(raw => raw)
 
-    val df = session.createDataFrame(pages)
-    df.write.mode(SaveMode.Append).parquet(toPath)
+    val documents = files.mapPartitionsWithIndex((index: Int, iter: Iterator[(String, PortableDataStream)]) =>
+      iter.map(i => (PDFReader.readAsPagesTextDocument(i._1, i._2.open), index))
+    )
+
+    val pagesDF = session.createDataFrame(documents.map(_._1).flatMap { case (pagesTextDocument: PagesTextDocument) =>
+      pagesTextDocument.pages.map { case (index: Int, content: String) => Page(pagesTextDocument.fileName, index, content) }
+    })
+
+    val documentsDF = session.createDataFrame(documents.map(_._1).map { case (pagesTextDocument: PagesTextDocument) =>
+      TextDocument(pagesTextDocument.fileName, pagesTextDocument.document)
+    })
+
+    /*
+    val sentencesDF = session.createDataFrame(documents.map(_._1).flatMap { case (pagesTextDocument: PagesTextDocument) =>
+      pagesTextDocument.pages.map { case (index: Int, content: String) => {
+        SentenceSplitter.sentences(content).map {
+          case (sentance: String) => Sentence(pagesTextDocument.fileName, index, sentance)
+        }
+      }}
+    })
+    */
+
+    val sentences = documents.map(_._1).flatMap { case (pagesTextDocument: PagesTextDocument) =>
+      pagesTextDocument.pages.map {
+        case (i, page) => SentenceSplitter.sentences(page).map {
+          case (s) => Sentence(pagesTextDocument.fileName, i, s)
+        }
+      }
+    }.flatMap(row => row)
+
+    // val sentenceDF = session.createDataFrame(sentences)
+    //sentenceDF.collect().foreach { (row: ) => println(s"${row(0)} ${row(1)} ${row(2)}") }
+
+    sentences.foreach { case (s) => println(s"${s.fileName} ${s.pageNumber} ${s.sentence.length}") }
+
+    // TODO: Works
+    //pagesDF.write.mode(SaveMode.Overwrite).parquet(toPagesPath)
+    //documentsDF.write.mode(SaveMode.Overwrite).parquet(toDocumentsPath)
+
+    // TODO: This works
+    // documents.foreach { case (page: PagesTextDocument, i) => println(s"${page.fileName} ${page.pages.size} #${i}") }
 
     session.stop()
   }
