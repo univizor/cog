@@ -55,7 +55,7 @@ scalacOptions ++= Seq(
   "-Yinline"
 )
 
-mainClass in(Compile, run) := Some("cog.GeneralStats")
+mainClass in(Compile, run) := Some("cog.TextSplitter")
 
 fork := true
 
