@@ -1,9 +1,5 @@
-import java.io.DataInputStream
-
-import models._
 import org.apache.log4j.{Level, Logger, BasicConfigurator}
 import org.scalatest.FunSpec
-import scala.io.Source
 import utils.SentenceSplitter
 
 

@@ -74,6 +74,7 @@ object TextSplitter {
       }
     }.flatMap(row => row)
 
+
     // val sentenceDF = session.createDataFrame(sentences)
     //sentenceDF.collect().foreach { (row: ) => println(s"${row(0)} ${row(1)} ${row(2)}") }
 
