@@ -56,16 +56,6 @@ object TextSplitter {
       TextDocument(pagesTextDocument.fileName, pagesTextDocument.document)
     })
 
-    /*
-    val sentencesDF = session.createDataFrame(documents.map(_._1).flatMap { case (pagesTextDocument: PagesTextDocument) =>
-      pagesTextDocument.pages.map { case (index: Int, content: String) => {
-        SentenceSplitter.sentences(content).map {
-          case (sentance: String) => Sentence(pagesTextDocument.fileName, index, sentance)
-        }
-      }}
-    })
-    */
-
     val sentences = documents.map(_._1).flatMap { case (pagesTextDocument: PagesTextDocument) =>
       pagesTextDocument.pages.map {
         case (i, page) => SentenceSplitter.sentences(page).map {
@@ -74,17 +64,15 @@ object TextSplitter {
       }
     }.flatMap(row => row)
 
+    val sentencesDF = session.createDataFrame(sentences)
 
-    // val sentenceDF = session.createDataFrame(sentences)
-    //sentenceDF.collect().foreach { (row: ) => println(s"${row(0)} ${row(1)} ${row(2)}") }
 
-    sentences.foreach { case (s) => println(s"${s.fileName} ${s.pageNumber} ${s.sentence.length}") }
+    pagesDF.write.mode(SaveMode.Overwrite).parquet(toPagesPath)
+    documentsDF.write.mode(SaveMode.Overwrite).parquet(toDocumentsPath)
+    sentencesDF.write.mode(SaveMode.Overwrite).parquet(toSentencesPath)
 
-    // TODO: Works
-    //pagesDF.write.mode(SaveMode.Overwrite).parquet(toPagesPath)
-    //documentsDF.write.mode(SaveMode.Overwrite).parquet(toDocumentsPath)
-
-    // TODO: This works
+    // TODO: This might help with debugging.
+    // sentences.foreach { case (s) => println(s"${s.fileName} ${s.pageNumber} ${s.sentence.length}") }
     // documents.foreach { case (page: PagesTextDocument, i) => println(s"${page.fileName} ${page.pages.size} #${i}") }
 
     session.stop()
