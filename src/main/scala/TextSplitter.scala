@@ -48,6 +48,7 @@ object TextSplitter {
       iter.map(i => (PDFReader.readAsPagesTextDocument(i._1, i._2.open), index))
     )
 
+    /*
     val pagesDF = session.createDataFrame(documents.map(_._1).flatMap { case (pagesTextDocument: PagesTextDocument) =>
       pagesTextDocument.pages.map { case (index: Int, content: String) => Page(pagesTextDocument.fileName, index, content) }
     })
@@ -55,11 +56,12 @@ object TextSplitter {
     val documentsDF = session.createDataFrame(documents.map(_._1).map { case (pagesTextDocument: PagesTextDocument) =>
       TextDocument(pagesTextDocument.fileName, pagesTextDocument.document)
     })
+    */
 
     val sentences = documents.map(_._1).flatMap { case (pagesTextDocument: PagesTextDocument) =>
       pagesTextDocument.pages.map {
-        case (i, page) => SentenceSplitter.sentences(page).map {
-          case (s) => Sentence(pagesTextDocument.fileName, i, s)
+        case (pageNumber, page) => SentenceSplitter.sentences(page).zipWithIndex.map {
+          case (sentence, sentenceIndex) => Sentence(pagesTextDocument.fileName, pageNumber, sentenceIndex, sentence)
         }
       }
     }.flatMap(row => row)
@@ -67,13 +69,17 @@ object TextSplitter {
     val sentencesDF = session.createDataFrame(sentences)
 
 
-    pagesDF.write.mode(SaveMode.Overwrite).parquet(toPagesPath)
-    documentsDF.write.mode(SaveMode.Overwrite).parquet(toDocumentsPath)
+    // pagesDF.write.mode(SaveMode.Overwrite).parquet(toPagesPath)
+    // documentsDF.write.mode(SaveMode.Overwrite).parquet(toDocumentsPath)
+
     sentencesDF.write.mode(SaveMode.Overwrite).parquet(toSentencesPath)
 
     // TODO: This might help with debugging.
     // sentences.foreach { case (s) => println(s"${s.fileName} ${s.pageNumber} ${s.sentence.length}") }
     // documents.foreach { case (page: PagesTextDocument, i) => println(s"${page.fileName} ${page.pages.size} #${i}") }
+
+
+    // sentencesDF.show(100, false)
 
     session.stop()
   }

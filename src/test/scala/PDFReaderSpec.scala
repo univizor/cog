@@ -47,7 +47,7 @@ class PDFReaderSpec extends FunSpec {
     it("Reads as Page") {
       val pages = PDFReader.readAsPages(filename, file, Some(1), Some(2))
       assertResult(2)(pages.length)
-      assertResult(0)(pages.head.number)
+      assertResult(1)(pages.head.number)
     }
   }
 }

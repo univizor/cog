@@ -12,4 +12,4 @@ case class PagesTextDocument(fileName: String, pages: Seq[(Int, String)], docume
 
 case class Page(fileName: String, number: Int, page: String) extends Document
 
-case class Sentence(fileName: String, pageNumber: Int, sentence: String) extends Document
+case class Sentence(fileName: String, pageNumber: Int, sentenceNumber: Int, sentence: String) extends Document
