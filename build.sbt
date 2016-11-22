@@ -27,6 +27,7 @@ libraryDependencies ++= Seq(
   // "org.apache.spark" %% "spark-hive" % sparkVersion,
 
   "org.apache.opennlp" % "opennlp-tools" % opennlpVersion,
+  "com.rockymadden.stringmetric" %% "stringmetric-core" % "0.27.4",
 
   "org.bouncycastle" % "bcprov-jdk15on" % "1.55",
   "org.bouncycastle" % "bcmail-jdk15on" % "1.55",
