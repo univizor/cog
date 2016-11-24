@@ -10,12 +10,10 @@ resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repos
 resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
 resolvers += Resolver.bintrayRepo("yetu", "maven")
 
-val sparkVersion = "2.0.1"
+val sparkVersion = "2.0.2"
 val pdfboxVersion = "2.0.3"
 val scalaTestVersion = "3.0.0"
 val opennlpVersion = "1.6.0"
-
-unmanagedJars in Compile += file(Path.userHome + "/Your-Jar-Path/Full-Jar-Name.jar")
 
 libraryDependencies ++= Seq(
   "org.apache.pdfbox" % "pdfbox" % pdfboxVersion,
@@ -30,7 +28,7 @@ libraryDependencies ++= Seq(
 
   "org.bouncycastle" % "bcprov-jdk15on" % "1.55",
   "org.bouncycastle" % "bcmail-jdk15on" % "1.55",
-  "org.scalactic" %% "scalactic" % scalaTestVersion,
+
   "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
 )
 
