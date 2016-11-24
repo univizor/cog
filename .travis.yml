@@ -11,14 +11,14 @@ scala:
 
 cache:
   directories:
-    - .sbt
+    - ~/.sbt
+    - ~/.ivy2
     - $HOME/.ivy2
     - $HOME/.sbt/launchers/
     - $HOME/.cache/spark-versions
 
 script:
-  - sbt -sbt-version $SBT_VERSION
-  - sbt test
+  - sbt -sbt-version $SBT_VERSION test
 
 env:
   - SBT_VERSION=0.13.13
