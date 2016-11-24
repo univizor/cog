@@ -1,30 +1,22 @@
 # cog
 
+[![Build status][build-status-image]][build-status]
+
 ## Stages
 
-1. PDF to pages ~> [TextSplitter](./src/main/scala/TextSplitter.scala).
-2. Words to lemmas ~> [Lemmatizer](./src/main/scala/nlp/Lemmatizer.scala) with [LemmaGen] and extensions.
-3. Pages to sentences ~> [PagesProcessor](./src/main/scala/PagesProcessor.scala).
-4. Detecting intersections ~> `Detector`
-
-
-
-## Development
-
-```bash
-sbt "run local[8] ./data/files/"
-
-./bin/run_on_local_cluster.sh
-./bin/run_spark-shell.sh
-```
+1. [TextSplitter] converts PDFs to documents with sentacnes.
+2. `Detector` detect document similarities.
 
 ## Test suite
 
 ```bash
-sbt test
+sbt -sbt-version 0.13.13 test
 ```
 
 - [Oto Brglez](https://github.com/otobrglez/cog)
 
 
 [LemmaGen]: http://lemmatise.ijs.si/
+[TextSplitter]: ./src/main/scala/TextSplitter.scala
+[build-status]: https://travis-ci.org/univizor/cog
+[build-status-image]: https://travis-ci.org/univizor/cog.svg?branch=master
