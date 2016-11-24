@@ -9,3 +9,14 @@ jdk:
 scala:
   - 2.11.8
 
+cache:
+  directories:
+    - $HOME/.ivy2
+    - $HOME/.sbt/launchers/
+    - $HOME/.cache/spark-versions
+
+script:
+  - sbt -sbt-version $SBT_VERSION
+
+env:
+  - SBT_VERSION=0.13.13
