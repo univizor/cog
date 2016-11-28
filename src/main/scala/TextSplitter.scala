@@ -9,6 +9,10 @@ import org.apache.spark.{SparkContext}
 import utils.{PDFReader, SentenceSplitter}
 
 trait CogSparkApp extends App {
+  final val logLevel = Level.ERROR
+  LogManager.getRootLogger.setLevel(logLevel)
+  LogManager.getLogger("org").setLevel(logLevel)
+
   val spark = SparkSession.builder.appName("TextSplitter").getOrCreate()
 }
 
