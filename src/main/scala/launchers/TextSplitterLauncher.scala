@@ -11,5 +11,7 @@ object TextSplitterLauncher extends App {
   System.setProperty("spark.master", "local[*]")
 
   val testArgs = Array[String]("./data/10-files")
+  // val testArgs = Array[String]("./data/files")
+
   TextSplitter.main(testArgs)
 }
