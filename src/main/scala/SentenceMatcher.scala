@@ -52,12 +52,13 @@ object SentenceMatcher extends CogSparkMatcherApp {
 
     predictions.createTempView("sentences")
 
-    val sentences = spark.sql("SELECT * FROM sentences")
+    predictions.printSchema()
+
+    val sentences = spark.sql("SELECT label, prediction, sentence._1 as sentenceIndex, sentence._2 as sentenceContent FROM sentences")
 
     println(s"Sentences COUNT = ${sentences.count()}")
 
     sentences.printSchema()
-
 
     // predictions.show(3, false)
 
