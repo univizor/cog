@@ -24,13 +24,25 @@ object SentenceMatcher extends CogSparkMatcherApp {
   import spark.implicits._
 
   try {
-    val documents = spark.read.load("data/documents")
-    documents.createOrReplaceTempView("documents")
+    val documents = spark.read
+      .load("data/documents")
+    /*
+          .select(
+            'fileName,
+            explode($"sentences.pageNumber").as("pageNumber"),
+            explode($"sentences.sentenceIndex").as("sentenceIndex"),
+            explode($"sentences.sentence").as("sentence"))
+      */
+
+    // documents.createOrReplaceTempView("documents")
 
     val tokenizer = new Tokenizer().setInputCol("document").setOutputCol("words")
 
     val wordsData = tokenizer.transform(documents)
-    val hashingTF = new HashingTF().setInputCol("words").setOutputCol("rawFeatures").setNumFeatures(NUM_FEATURES)
+
+    val hashingTF = new HashingTF()
+      .setInputCol("words").setOutputCol("rawFeatures")
+      .setNumFeatures(NUM_FEATURES)
 
     val ftdData = hashingTF.transform(wordsData).cache()
 
@@ -39,14 +51,31 @@ object SentenceMatcher extends CogSparkMatcherApp {
 
     val rescaledData = idfModel.transform(ftdData).withColumnRenamed("fileName", "label")
 
-    val kmeans = new KMeans().setK(K).setSeed(SEED).setFeaturesCol("rawFeatures")
+    val kmeans = new KMeans().setK(K).setSeed(SEED)
     val kmeansModel = kmeans.fit(rescaledData)
 
     // val WSSSE = kmeansModel.computeCost(rescaledData)
     // println(s"Within Set Sum of Squared Errors = $WSSSE")
 
     // kmeansModel.summary.predictions.printSchema()
+    // kmeansModel.summary.predictions.show(5)
 
+    val predictions = kmeansModel.summary.predictions
+      .cache()
+
+    predictions.printSchema()
+
+    predictions.show(10)
+
+    /*
+    * 1: 3-4
+    * 2: 5-6
+    * 4: 7-8
+    * 5: 8-7
+    * */
+
+
+    /*
     val predictions = kmeansModel.summary.predictions
       .withColumn("sentence", explode('sentences))
 
@@ -59,6 +88,7 @@ object SentenceMatcher extends CogSparkMatcherApp {
     println(s"Sentences COUNT = ${sentences.count()}")
 
     sentences.printSchema()
+      */
 
     // predictions.show(3, false)
 
