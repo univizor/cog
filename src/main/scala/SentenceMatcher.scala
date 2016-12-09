@@ -6,35 +6,34 @@ import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.ml.feature.{HashingTF, IDF, Tokenizer}
 import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.sql.functions.{explode}
+import utils.{TextMatcher, StringMetric}
 import scala.collection.mutable.{WrappedArray}
+import org.apache.spark.sql.functions.udf
 
 trait CogSparkMatcherApp extends App {
   final val logLevel = Level.ERROR
   LogManager.getRootLogger.setLevel(logLevel)
   LogManager.getLogger("org").setLevel(logLevel)
 
-  val spark = SparkSession.builder.appName("TextSplitter").getOrCreate()
+  val spark = SparkSession.builder.appName("TextSplitter")
+    .config("spark.sql.crossJoin.enabled", "true")
+    .getOrCreate()
 }
 
 object SentenceMatcher extends CogSparkMatcherApp {
   final val NUM_FEATURES = 100
+  final val MIN_SENTENCE_LENGTH = 30
   final val K = 10
   final val SEED = 1L
 
   import spark.implicits._
+  import org.apache.spark.sql.functions._
+
+  val upper: String => String = _.toUpperCase
+  val similarity: (String, String) => Double = (a: String, b: String) => StringMetric.distance(a, b)
 
   try {
-    val documents = spark.read
-      .load("data/documents")
-    /*
-          .select(
-            'fileName,
-            explode($"sentences.pageNumber").as("pageNumber"),
-            explode($"sentences.sentenceIndex").as("sentenceIndex"),
-            explode($"sentences.sentence").as("sentence"))
-      */
-
-    // documents.createOrReplaceTempView("documents")
+    val documents = spark.read.load("data/documents")
 
     val tokenizer = new Tokenizer().setInputCol("document").setOutputCol("words")
 
@@ -57,76 +56,39 @@ object SentenceMatcher extends CogSparkMatcherApp {
     // val WSSSE = kmeansModel.computeCost(rescaledData)
     // println(s"Within Set Sum of Squared Errors = $WSSSE")
 
-    // kmeansModel.summary.predictions.printSchema()
-    // kmeansModel.summary.predictions.show(5)
+    val predictions = kmeansModel.summary.predictions.cache()
+    predictions.createOrReplaceTempView("predictions")
 
-    val predictions = kmeansModel.summary.predictions
-      .cache()
+    spark.sql(
+      s"""
+         | SELECT label as fileName, prediction, inline(sentences)
+         | FROM predictions HAVING length(sentence) > ${MIN_SENTENCE_LENGTH}
+         | """.stripMargin)
+      .createOrReplaceTempView("sentences")
 
-    predictions.printSchema()
+    spark.sqlContext.udf.register("similarity", (a: String, b: String) => StringMetric.distance(a, b))
 
-    predictions.show(10)
+    val matches = spark.sql(
+      s"""
+         | SELECT
+         |  DISTINCT
+         |    a.fileName,
+         |    b.fileName,
+         |    a.sentence AS s_a,
+         |    b.sentence AS s_b
+         | FROM sentences a
+         | CROSS JOIN sentences b
+         | WHERE
+         |  a.fileName < b.fileName AND
+         |  a.prediction = b.prediction
+         | HAVING
+         |  similarity(a.sentence, b.sentence) > 0.9
+         | ORDER BY a.fileName, b.fileName
+       """.stripMargin)
 
-    /*
-    * 1: 3-4
-    * 2: 5-6
-    * 4: 7-8
-    * 5: 8-7
-    * */
+    matches.show(20, true)
 
-
-    /*
-    val predictions = kmeansModel.summary.predictions
-      .withColumn("sentence", explode('sentences))
-
-    predictions.createTempView("sentences")
-
-    predictions.printSchema()
-
-    val sentences = spark.sql("SELECT label, prediction, sentence._1 as sentenceIndex, sentence._2 as sentenceContent FROM sentences")
-
-    println(s"Sentences COUNT = ${sentences.count()}")
-
-    sentences.printSchema()
-      */
-
-    // predictions.show(3, false)
-
-    /*
-    val sentencesRDD = predictions.rdd.flatMap { row =>
-      // row.geAs[WrappedArray[(String, Int)]]("sentences")
-      // val sentences = row.getAs[WrappedArray[(String, Int)]]("sentences")
-      // sentences.map(pair => (pair._1, pair._2))
-      // row.getAs[Array[(String, Int)]]("sentences")
-
-      // (row.getString(1), 10)
-
-      (row.getString(0), 10)
-    }
-    */
-
-    // sentencesRDD.take(3).foreach(println)
-
-    // sentencesRDD.printSchema()
-
-    // println(s"Count = ${sentencesRDD.count()}")
-
-    // sentencesRDD.foreach(println)
-
-
-    /* .flatMap { row =>
-    row.getAs[Seq[Seq[Double]]]("rawFeatures")
-  }    */
-
-
-    /*
-    predictions.rdd.map {
-      case Row(label: String, prediction: Int, word: mutable.WrappedArray[String], rawFeatures: Vector, features: Vector) =>
-        var di
-    }
-    */
-
-
+    println(s"COUNT = ${matches.count()}")
   } finally {
     spark.stop()
   }
