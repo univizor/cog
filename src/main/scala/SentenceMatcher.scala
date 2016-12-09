@@ -71,18 +71,16 @@ object SentenceMatcher extends CogSparkMatcherApp {
     val matches = spark.sql(
       s"""
          | SELECT
-         |  DISTINCT
-         |    a.fileName,
-         |    b.fileName,
-         |    a.sentence AS s_a,
-         |    b.sentence AS s_b
+         |  a.fileName,
+         |  b.fileName,
+         |  a.sentence AS s_a,
+         |  b.sentence AS s_b,
+         |  similarity(a.sentence, b.sentence)
          | FROM sentences a
-         | CROSS JOIN sentences b
+         | INNER JOIN sentences b
          | WHERE
          |  a.fileName < b.fileName AND
          |  a.prediction = b.prediction
-         | HAVING
-         |  similarity(a.sentence, b.sentence) > 0.9
          | ORDER BY a.fileName, b.fileName
        """.stripMargin)
 
