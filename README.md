@@ -7,7 +7,8 @@
 1. [TextSplitter] "cleans" and converts PDFs to documents with embedded sentences.
 2. [SentenceMatcher] computes [TF-IDF frequency][tf-idf] and clusters documents with [K-means][k-means] into
 manageable clusters. Sentences within the same clusters are then compared with their [Sørensen–Dice coefficient][fuzzy-similarity].
-Similarity can than be ad-hoc mined from `sentences` via some other tools,...
+
+After that, data can be ad-hoc mined from `sentences` via some other tool,...
 
 ## Test suite
 
