@@ -18,7 +18,7 @@ trait CogSparkApp extends App {
 }
 
 object TextSplitter extends CogSparkApp {
-  final val SENTENCE_MIN_LENGTH = 40
+  final val SENTENCE_MIN_LENGTH = 50
   final val PAGES_SEPARATOR = "\n\n"
 
   val Array(sourceFiles) = Array[String](args(0))
@@ -26,7 +26,7 @@ object TextSplitter extends CogSparkApp {
 
   import spark.implicits._
 
-  case class Sentence(pageNumber: Int, sentenceIndex: Int, sentence: String)
+  case class Sentence(pageNumber: Int, sentenceIndex: Int, sentenceLength: Int, sentence: String)
 
   case class Document(fileName: String, document: String, sentences: Seq[Sentence])
 
@@ -38,7 +38,7 @@ object TextSplitter extends CogSparkApp {
       sentences = pagesDocument.pages.flatMap {
         case (pageNumber: Int, page: String) =>
           SentenceSplitter.sentences(page).zipWithIndex.map {
-            case (sentence: String, sentenceIndex: Int) => Sentence(pageNumber, sentenceIndex, sentence)
+            case (sentence: String, sentenceIndex: Int) => Sentence(pageNumber, sentenceIndex, sentence.length, sentence)
           }
       })
   }

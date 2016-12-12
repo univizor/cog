@@ -2,7 +2,7 @@ package cog
 
 import org.apache.log4j.{LogManager, Level, Logger}
 import org.apache.spark.ml.clustering.KMeans
-import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.sql.{SaveMode, Row, SparkSession}
 import org.apache.spark.ml.feature.{HashingTF, IDF, Tokenizer}
 import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.sql.functions.{explode}
@@ -22,7 +22,7 @@ trait CogSparkMatcherApp extends App {
 
 object SentenceMatcher extends CogSparkMatcherApp {
   final val NUM_FEATURES = 100
-  final val MIN_SENTENCE_LENGTH = 30
+  final val MIN_SENTENCE_LENGTH = 50
   final val K = 10
   final val SEED = 1L
 
@@ -31,6 +31,7 @@ object SentenceMatcher extends CogSparkMatcherApp {
 
   val upper: String => String = _.toUpperCase
   val similarity: (String, String) => Double = (a: String, b: String) => StringMetric.distance(a, b)
+  spark.sqlContext.udf.register("stringSimilarity", (a: String, b: String) => StringMetric.distance(a, b))
 
   try {
     val documents = spark.read.load("data/documents")
@@ -62,31 +63,35 @@ object SentenceMatcher extends CogSparkMatcherApp {
     spark.sql(
       s"""
          | SELECT label as fileName, prediction, inline(sentences)
-         | FROM predictions HAVING length(sentence) > ${MIN_SENTENCE_LENGTH}
+         | FROM predictions
+         | HAVING sentenceLength > ${MIN_SENTENCE_LENGTH}
          | """.stripMargin)
       .createOrReplaceTempView("sentences")
-
-    spark.sqlContext.udf.register("similarity", (a: String, b: String) => StringMetric.distance(a, b))
 
     val matches = spark.sql(
       s"""
          | SELECT
-         |  a.fileName,
-         |  b.fileName,
-         |  a.sentence AS s_a,
-         |  b.sentence AS s_b,
-         |  similarity(a.sentence, b.sentence)
+         |  a.fileName AS fileName_a,
+         |  b.fileName AS fileName_b,
+         |  a.sentence AS sentence_a,
+         |  b.sentence AS sentence_b,
+         |  a.pageNumber AS pageNumber_a,
+         |  b.pageNumber AS pageNumber_b,
+         |  a.sentenceIndex AS sentenceIndex_a,
+         |  b.sentenceIndex AS sentenceIndex_b,
+         |  stringSimilarity(a.sentence, b.sentence) as similarity
          | FROM sentences a
          | INNER JOIN sentences b
          | WHERE
          |  a.fileName < b.fileName AND
-         |  a.prediction = b.prediction
+         |  a.prediction = b.prediction AND
+         |  a.sentenceLength = b.sentenceLength
          | ORDER BY a.fileName, b.fileName
        """.stripMargin)
 
-    matches.show(20, true)
-
-    println(s"COUNT = ${matches.count()}")
+    matches.write
+      .mode(SaveMode.Overwrite)
+      .save("data/matches")
   } finally {
     spark.stop()
   }
