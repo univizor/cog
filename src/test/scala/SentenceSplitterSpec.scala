@@ -14,4 +14,11 @@ class SentenceSplitterSpec extends FunSpec {
       assertResult(2)(sentences.length)
     }
   }
+
+  describe("Cleans") {
+    it("removes excess whitespace") {
+      val sentences = SentenceSplitter.cleanText("    To je          Demo.  \n Tudi to   \n\ndemo.")
+      assertResult("To je Demo. Tudi to demo.")(sentences)
+    }
+  }
 }

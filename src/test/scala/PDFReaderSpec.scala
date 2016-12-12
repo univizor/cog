@@ -26,7 +26,7 @@ class PDFReaderSpec extends FunSpec {
       assertResult(79)(pages._2.pages.length)
     }
 
-    it("Does not read non-PDFs"){
+    it("Does not read non-PDFs") {
       val pages = PDFReader.read("test.txt", readTestFile("test.txt"))
       assertResult(0)(pages._2.pages.length)
     }
@@ -39,7 +39,7 @@ class PDFReaderSpec extends FunSpec {
     }
     it("Reads between pages") {
       val pages = PDFReader.readPages(filename, file, Some(1), Some(2))
-      assertResult(2)(pages.length)
+      assertResult(1)(pages.head._2)
     }
   }
 
@@ -47,7 +47,7 @@ class PDFReaderSpec extends FunSpec {
     it("Reads as Page") {
       val pages = PDFReader.readAsPages(filename, file, Some(1), Some(2))
       assertResult(2)(pages.length)
-      assertResult(0)(pages.head.number)
+      assertResult(1)(pages.head.number)
     }
   }
 }

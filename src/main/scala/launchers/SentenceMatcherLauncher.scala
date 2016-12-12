@@ -1,17 +1,14 @@
 package launchers
 
-import cog.TextSplitter
+import cog.SentenceMatcher
 import org.apache.log4j.{Level, LogManager}
 
-object TextSplitterLauncher extends App {
+object SentenceMatcherLauncher extends App {
   final val logLevel = Level.ERROR
   LogManager.getRootLogger.setLevel(logLevel)
   LogManager.getLogger("org").setLevel(logLevel)
 
   System.setProperty("spark.master", "local[*]")
 
-  val testArgs = Array[String]("./data/10-files")
-  // val testArgs = Array[String]("./data/files")
-
-  TextSplitter.main(testArgs)
+  SentenceMatcher.main(args)
 }

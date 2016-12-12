@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+set -e
+/Users/otobrglez/Projects/univizor/spark-bin-hadoop/bin/spark-shell --master "local[6]"

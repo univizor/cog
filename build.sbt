@@ -22,12 +22,14 @@ libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-core" % sparkVersion,
   "org.apache.spark" %% "spark-sql" % sparkVersion,
   "org.apache.spark" %% "spark-repl" % sparkVersion,
-  // "org.apache.spark" %% "spark-hive" % sparkVersion,
+  "org.apache.spark" %% "spark-mllib" % sparkVersion,
 
   "org.apache.opennlp" % "opennlp-tools" % opennlpVersion,
 
   "org.bouncycastle" % "bcprov-jdk15on" % "1.55",
   "org.bouncycastle" % "bcmail-jdk15on" % "1.55",
+
+  "com.rockymadden.stringmetric" %% "stringmetric-core" % "0.27.4",
 
   "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
 )
