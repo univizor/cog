@@ -29,6 +29,8 @@ libraryDependencies ++= Seq(
   "org.bouncycastle" % "bcprov-jdk15on" % "1.55",
   "org.bouncycastle" % "bcmail-jdk15on" % "1.55",
 
+  "org.zouzias" %% "spark-lucenerdd" % "0.2.4",
+
   "com.rockymadden.stringmetric" %% "stringmetric-core" % "0.27.4",
 
   "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
