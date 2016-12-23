@@ -11,9 +11,7 @@ trait SentenceMatcherXSparkApp extends App {
   LogManager.getRootLogger.setLevel(logLevel)
   LogManager.getLogger("org").setLevel(logLevel)
 
-  val spark = SparkSession.builder
-    .appName(this.getClass.getName)
-    .getOrCreate()
+  val spark = SparkSession.builder.appName(this.getClass.getName).getOrCreate()
 }
 
 
@@ -21,12 +19,32 @@ case class Sentence(fileName: String, pageNumber: Int, sentenceIndex: Int, sente
 
 case class SearchMatch(sentence: Sentence, sentences: Seq[Sentence])
 
-case class DocumentMatch(sentenceA: Sentence, sentenceB: Sentence, score: Option[Float] = Some(0.0.asInstanceOf[Float]))
+case class DocumentMatch(sentenceA: Sentence, sentenceB: Sentence, score: Option[Float] = Some(0.0.asInstanceOf[Float])) {
+  def toMatchPoint: MatchPoint = MatchPoint(
+    this.sentenceA.fileName, this.sentenceB.fileName,
+    this.sentenceA.pageNumber, this.sentenceB.pageNumber,
+    this.sentenceA.sentenceIndex, this.sentenceB.sentenceIndex,
+    this.sentenceA.sentence.substring(0, 5), this.sentenceB.sentence.substring(0, 5),
+    this.score.getOrElse {
+      0.0.asInstanceOf[Float]
+    }
+  )
+}
+
+case class MatchPoint(fileNameA: String, fileNameB: String,
+                      pageNumberA: Int, pageNumberB: Int,
+                      sentenceIndexA: Int, sentenceIndexB: Int,
+                      sentenceA: String, sentenceB: String,
+                      score: Float)
+
 
 object SentenceMatcherX extends SentenceMatcherXSparkApp {
+
+  import DocumentMatch._
+
   final val STOP_WORDS = Seq[String](
-    "kazalo", "KAZALO", "abstract", "ABSTRACT", "seznam", "SEZNAM",
-    "literatura", "simboli", "strinjam", "objavo", "univerza", "dovoljujem"
+    "kazalo", "KAZALO", "abstract", "ABSTRACT", "seznam", "SEZNAM", "plagiatorstvo", "Datum",
+    "literatura", "simboli", "strinjam", "objavo", "univerza", "dovoljujem", "pravici", "zagovora"
   )
   final val STOP_SYMBOLS = Seq[String]("....", "----")
   final val MIN_SENTENCE_LENGTH = spark.conf.getOption("min_sentence_length").getOrElse("100").toInt
@@ -58,14 +76,13 @@ object SentenceMatcherX extends SentenceMatcherXSparkApp {
     val sentences = spark.sql(
       s"""| SELECT fileName, inline(sentences)
           | FROM documents
-          |
+          | -- WHERE fileName LIKE '%novica%'
           | HAVING
-          |   noStopWords(sentence) AND
-          |   (sentenceLength BETWEEN $MIN_SENTENCE_LENGTH AND $MAX_SENTENCE_LENGTH)
-          | LIMIT 500000
+          |   (sentenceLength BETWEEN $MIN_SENTENCE_LENGTH AND $MAX_SENTENCE_LENGTH) AND noStopWords(sentence)
+          | -- LIMIT 100000
           | """.stripMargin)
 
-    // WHERE fileName LIKE '%novica%'
+    // WHERE fileName LIKE '% novica % '
 
     logger.info(s"Sentences count is ${sentences.count()}.")
 
@@ -87,7 +104,7 @@ object SentenceMatcherX extends SentenceMatcherXSparkApp {
       }
     }
 
-    val linked = sentencesRDD.linkDataFrame(rawSentencesRDD, rowLinker, luceneRDDCount.toInt)
+    val linked = sentencesRDD.linkDataFrame(rawSentencesRDD, rowLinker, 4)
 
     val linkedResults = spark.createDataFrame(linked.filter(_._2.nonEmpty).map {
       case (row: Row, docs: Array[SparkScoreDoc]) => {
@@ -100,36 +117,29 @@ object SentenceMatcherX extends SentenceMatcherXSparkApp {
           doc.doc.textField("sentence").getOrElse("[none]"),
           Some(doc.score)
         )).groupBy(_.fileName).map(_._2.head).asInstanceOf[Seq[Sentence]]
-
         SearchMatch(sentence, sentences)
       }
     }).as[SearchMatch]
 
     linkedResults.cache()
 
-    /*
-    linkedResults.foreach { searchMatch: SearchMatch => {
-      println(s"${searchMatch.sentence.fileName} (${searchMatch.sentences.length}) ${searchMatch.sentence.sentence}")
-      searchMatch.sentences.foreach { sentence =>
-        println(s"\t ${sentence.fileName} [${sentence.score}] ${sentence.sentence}")
-      }
-    }
-    }
-    */
-
     val flatResults = linkedResults.flatMap(searchMatch =>
-      searchMatch.sentences.map(s => {
-        val Array(first, second) = Array(searchMatch.sentence, s).sortWith(_.fileName < _.fileName)
-        DocumentMatch(first, second, s.score)
-      }))
+      searchMatch.sentences.map(s => DocumentMatch(searchMatch.sentence, s, s.score)))
       .dropDuplicates("sentenceA", "sentenceB")
+
 
     flatResults.foreach { documentMatch: DocumentMatch =>
       println(s"${documentMatch.sentenceA.fileName} -> ${documentMatch.sentenceB.fileName} ${documentMatch.score.get}\n" +
         s"A = ${documentMatch.sentenceA.sentence}\n" +
         s"B = ${documentMatch.sentenceB.sentence}\n")
-
     }
+
+    logger.info("Writing to \"data/points\".")
+
+    flatResults.map(_.toMatchPoint)
+      .write
+      .mode(SaveMode.Overwrite)
+      .save("data/points")
 
 
   } finally {

@@ -33,6 +33,8 @@ libraryDependencies ++= Seq(
 
   "com.rockymadden.stringmetric" %% "stringmetric-core" % "0.27.4",
 
+  "postgresql" % "postgresql" % "9.1-901-1.jdbc4",
+
   "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
 )
 
