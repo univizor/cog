@@ -21,7 +21,11 @@ sbt -sbt-version 0.13.13 test
 ```bash
 docker-compose -f docker-compose.yml -f docker-compose.local.yml up
 
-./bin/local-spark-submit.sh --class org.apache.spark.examples.SparkPi /home/app/target/scala-2.11/spark-examples_2.11-2.0.1.jar
+./bin/local-spark-submit.sh --class org.apache.spark.examples.SparkPi \
+    /home/app/target/scala-2.11/spark-examples_2.11-2.0.1.jar
+
+sbt package && ./bin/local-spark-submit.sh --class cog.TextSplitter \
+    /home/app/target/scala-2.11/cog_2.11-1.0.jar "./data/10-files/"
 ```
 
 - [Oto Brglez](https://github.com/otobrglez/cog)

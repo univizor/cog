@@ -4,3 +4,7 @@ services:
   master:
     volumes:
       - .:/home/app
+      - ./data:/srv/data/data
+  slave:
+    volumes:
+      - ./data:/srv/data/data

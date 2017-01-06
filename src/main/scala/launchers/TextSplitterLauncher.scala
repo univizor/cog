@@ -8,7 +8,7 @@ object TextSplitterLauncher extends App {
   LogManager.getRootLogger.setLevel(logLevel)
   LogManager.getLogger("org").setLevel(logLevel)
 
-  System.setProperty("spark.master", "local[*]")
+  System.setProperty("spark.master", System.getProperty("spark.master", "master[*]"))
 
   val testArgs = Array[String]("./data/10-files")
   // val testArgs = Array[String]("./data/files")

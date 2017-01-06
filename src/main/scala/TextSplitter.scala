@@ -6,15 +6,17 @@ import org.apache.spark.sql.{SaveMode, Row, Encoders, SparkSession}
 import org.apache.log4j.{LogManager, Level, Logger}
 import org.apache.spark.input.{PortableDataStream}
 import org.apache.spark.rdd.{RDD}
-import org.apache.spark.{SparkContext}
+import org.apache.spark.{SparkFiles, SparkConf, SparkContext}
 import utils.{PDFReader, SentenceSplitter}
 
 trait CogSparkApp extends App {
-  final val logLevel = Level.ERROR
+  final val APP_NAME = "TextSplitter"
+  final val logLevel = Level.INFO
   LogManager.getRootLogger.setLevel(logLevel)
   LogManager.getLogger("org").setLevel(logLevel)
 
-  val spark = SparkSession.builder.appName("TextSplitter").getOrCreate()
+  val conf = new SparkConf().setAppName(APP_NAME)
+  lazy val spark = SparkSession.builder().config(conf).getOrCreate()
 }
 
 object TextSplitter extends CogSparkApp {
@@ -22,7 +24,10 @@ object TextSplitter extends CogSparkApp {
   final val PAGES_SEPARATOR = "\n\n"
 
   val Array(sourceFiles) = Array[String](args(0))
+
   val sc = spark.sparkContext
+
+  val logger = LogManager.getLogger(APP_NAME)
 
   import spark.implicits._
 
@@ -44,6 +49,10 @@ object TextSplitter extends CogSparkApp {
   }
 
   try {
+    logger.info(s"spark.master ~> ${conf.get("spark.master")}")
+    logger.info(s"Reading files from ${SparkFiles.get(sourceFiles)}")
+    logger.info(s"Spark files root directory ${SparkFiles.getRootDirectory()}")
+
     val files = sc.binaryFiles(sourceFiles).map(line => documentWithSentences(line._1, line._2.open()))
 
     val documents = files.toDF().cache()
